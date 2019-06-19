@@ -1,0 +1,11 @@
+# Build artifacts
+pkg/
+
+# Python environment for scripts
+venv/
+
+# Databases
+*.sqlite3
+
+# JetBrains
+.idea/
