@@ -40,8 +40,10 @@ func (rm *agentStore) Values() []Agent {
 
 	agents := make([]Agent, len(rm.internal))
 
+	var i int
 	for _, v := range rm.internal {
-		agents = append(agents, v)
+		agents[i] = v
+		i++
 	}
 
 	rm.RUnlock()
