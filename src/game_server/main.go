@@ -41,8 +41,8 @@ func main() {
 	parseCommandline()
 
 	// Start database
-	db.StartDB(DEBUG_DBTODISK, DEBUG_DBLOG)
-	defer db.StopDB()
+	db.StartDB()
+	//defer db.StopDB()
 
 	// Starts serving http in seperate goroutine
 	gameServer := server.StartHTTPServer(":8080", DEBUG_HTTPLOG)

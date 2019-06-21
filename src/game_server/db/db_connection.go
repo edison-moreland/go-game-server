@@ -1,71 +1,56 @@
 package db
 
 import (
-	"errors"
-	"github.com/jinzhu/gorm"
-	"log"
-	"os"
-	"path/filepath"
+	"github.com/google/uuid"
+	"sync"
 )
 
-const DBPATH = "game_db.sqlite3"
+var database Database
 
-var databaseConnection *gorm.DB
-var isDatabaseInitialized bool = false
-
-func migrateModels(db *gorm.DB) {
-
-	db.AutoMigrate(&Agent{})
+type Database struct {
+	sync.RWMutex
+	internal map[uuid.UUID]Agent
 }
 
-// StartDB initialize Sqlite database
-func StartDB(writeToDisk bool, logTransactions bool) *gorm.DB {
-	if isDatabaseInitialized {
-		log.Panic("Database can't be initialized twice!")
+func NewDatabase(size int) *Database {
+	return &Database{
+		internal: make(map[uuid.UUID]Agent, size),
 	}
-
-	dbLocation := ":memory:"
-
-	if writeToDisk {
-		fullPath, err := filepath.Abs(DBPATH)
-		if err != nil {
-			log.Panic("Couldn't get absolute path for db")
-		}
-
-		// Try deleting old db, ignoring errors that probably mean old db doesn't exist
-		os.Remove(fullPath)
-
-		dbLocation = fullPath
-		log.Printf("Database path: {%v}", fullPath)
-	}
-
-	db, err := gorm.Open("sqlite3", dbLocation)
-	if err != nil {
-		log.Panicf("Failed to connect database! {%#v}", err)
-	}
-
-	db.LogMode(logTransactions)
-	migrateModels(db)
-
-	databaseConnection = db
-	isDatabaseInitialized = true
-
-	return db
 }
 
-// StopDB closes connection to database
-func StopDB() error {
-	if isDatabaseInitialized != true {
-		return errors.New("Database conection has not been initialized and can not be used")
-	}
-
-	return databaseConnection.Close()
+func (rm *Database) Load(key uuid.UUID) (value Agent, ok bool) {
+	rm.RLock()
+	result, ok := rm.internal[key]
+	rm.RUnlock()
+	return result, ok
 }
 
-// DBConnection returns the gorm connection manager
-func DBConnection() (*gorm.DB, error) {
-	if isDatabaseInitialized != true {
-		return nil, errors.New("Database conection has not been initialized and can not be used")
+func (rm *Database) Delete(key uuid.UUID) {
+	rm.Lock()
+	delete(rm.internal, key)
+	rm.Unlock()
+}
+
+func (rm *Database) Store(key uuid.UUID, value Agent) {
+	rm.Lock()
+	rm.internal[key] = value
+	rm.Unlock()
+}
+
+func (rm *Database) Values() []Agent {
+	rm.RLock()
+
+	agents := make([]Agent, len(rm.internal))
+
+	for _, v := range rm.internal {
+		agents = append(agents, v)
 	}
-	return databaseConnection, nil
+
+	rm.RUnlock()
+
+	return agents
+}
+
+func StartDB() {
+	database = *NewDatabase(5)
 }
