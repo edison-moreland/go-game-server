@@ -13,13 +13,9 @@ import (
 )
 
 // Debug flags
-var DEBUG_DBLOG = false
 var DEBUG_HTTPLOG = false
-var DEBUG_DBTODISK = false
 
 func parseCommandline() {
-	flag.BoolVar(&DEBUG_DBLOG, "dblog", false, "Log database transactions to stdout")
-	flag.BoolVar(&DEBUG_DBTODISK, "ondiskdb", false, "Write sqlite database to disk")
 	flag.BoolVar(&DEBUG_HTTPLOG, "httplog", false, "Log HTTP requests to stdout")
 
 	flag.Parse()
