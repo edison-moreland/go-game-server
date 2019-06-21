@@ -2,7 +2,7 @@ package server
 
 import (
 	"encoding/json"
-	"game_server/db"
+	"game_server/agent_store"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"log"
@@ -24,7 +24,7 @@ func AddAgentRoutes(router *mux.Router) {
 func getAgentsHandler(w http.ResponseWriter, request *http.Request) {
 	defer request.Body.Close()
 
-	agents, err := db.GetAllAgents()
+	agents, err := agent_store.GetAllAgents()
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -38,7 +38,7 @@ func getAgentsHandler(w http.ResponseWriter, request *http.Request) {
 func newAgentHandler(w http.ResponseWriter, request *http.Request) {
 	defer request.Body.Close()
 
-	var newAgent = db.Agent{}
+	var newAgent = agent_store.Agent{}
 	if request.ContentLength > 0 {
 		if err := UnmarshalBody(request.Body, &newAgent); err != nil {
 			log.Panic(err.Error())
@@ -46,7 +46,7 @@ func newAgentHandler(w http.ResponseWriter, request *http.Request) {
 	}
 
 	// Create new agent
-	agent, err := db.NewAgent(newAgent)
+	agent, err := agent_store.NewAgent(newAgent)
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -69,7 +69,7 @@ func getAgentHandler(w http.ResponseWriter, request *http.Request) {
 	}
 
 	// Get agent
-	agent, err := db.GetAgent(id)
+	agent, err := agent_store.GetAgent(id)
 	if err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusNotFound)
@@ -95,7 +95,7 @@ func updateAgentHandler(w http.ResponseWriter, request *http.Request) {
 	}
 
 	// unmarshal request body
-	var agentUpdate = db.Agent{}
+	var agentUpdate = agent_store.Agent{}
 	if err := UnmarshalBody(request.Body, &agentUpdate); err != nil {
 		log.Panic(err.Error())
 	}
@@ -104,7 +104,7 @@ func updateAgentHandler(w http.ResponseWriter, request *http.Request) {
 	agentUpdate.ID = id
 
 	// Update agent
-	if err := db.UpdateAgent(agentUpdate); err != nil {
+	if err := agent_store.UpdateAgent(agentUpdate); err != nil {
 		log.Print(err.Error())
 		w.WriteHeader(http.StatusNotFound)
 		return
@@ -122,7 +122,7 @@ func deleteAgentHandler(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if err = db.DeleteAgent(id); err != nil {
+	if err = agent_store.DeleteAgent(id); err != nil {
 		log.Panic(err)
 	}
 }

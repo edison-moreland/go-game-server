@@ -1,9 +1,15 @@
-package db
+package agent_store
 
 import (
 	"errors"
 	"github.com/google/uuid"
 )
+
+var agents agentStore
+
+func init() {
+	agents = *newAgentStore(5)
+}
 
 // Agent defines defines and an agent that's part of the simulation
 type Agent struct {
@@ -16,14 +22,14 @@ func NewAgent(a Agent) (Agent, error) {
 	id, _ := uuid.NewRandom()
 	a.ID = id
 
-	database.Store(id, a)
+	agents.Store(id, a)
 
 	return a, nil
 }
 
 // GetAgent return the agent with the specified UUID
 func GetAgent(id uuid.UUID) (Agent, error) {
-	agent, ok := database.Load(id)
+	agent, ok := agents.Load(id)
 	if !ok {
 		return Agent{}, errors.New("Agent not present")
 	}
@@ -32,19 +38,18 @@ func GetAgent(id uuid.UUID) (Agent, error) {
 
 // UpdateAgent updates the state of an agent
 func UpdateAgent(agent Agent) error {
-	database.Store(agent.ID, agent)
-
+	agents.Store(agent.ID, agent)
 	return nil
 }
 
 // DeleteAgent removes agent from db
 func DeleteAgent(id uuid.UUID) error {
-	database.Delete(id)
+	agents.Delete(id)
 	return nil
 }
 
 // GetAllAgents returns every agent registered to the controller
 func GetAllAgents() ([]Agent, error) {
 
-	return database.Values(), nil
+	return agents.Values(), nil
 }

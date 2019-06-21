@@ -1,43 +1,41 @@
-package db
+package agent_store
 
 import (
 	"github.com/google/uuid"
 	"sync"
 )
 
-var database Database
-
-type Database struct {
+type agentStore struct {
 	sync.RWMutex
 	internal map[uuid.UUID]Agent
 }
 
-func NewDatabase(size int) *Database {
-	return &Database{
+func newAgentStore(size int) *agentStore {
+	return &agentStore{
 		internal: make(map[uuid.UUID]Agent, size),
 	}
 }
 
-func (rm *Database) Load(key uuid.UUID) (value Agent, ok bool) {
+func (rm *agentStore) Load(key uuid.UUID) (value Agent, ok bool) {
 	rm.RLock()
 	result, ok := rm.internal[key]
 	rm.RUnlock()
 	return result, ok
 }
 
-func (rm *Database) Delete(key uuid.UUID) {
+func (rm *agentStore) Delete(key uuid.UUID) {
 	rm.Lock()
 	delete(rm.internal, key)
 	rm.Unlock()
 }
 
-func (rm *Database) Store(key uuid.UUID, value Agent) {
+func (rm *agentStore) Store(key uuid.UUID, value Agent) {
 	rm.Lock()
 	rm.internal[key] = value
 	rm.Unlock()
 }
 
-func (rm *Database) Values() []Agent {
+func (rm *agentStore) Values() []Agent {
 	rm.RLock()
 
 	agents := make([]Agent, len(rm.internal))
@@ -49,8 +47,4 @@ func (rm *Database) Values() []Agent {
 	rm.RUnlock()
 
 	return agents
-}
-
-func StartDB() {
-	database = *NewDatabase(5)
 }

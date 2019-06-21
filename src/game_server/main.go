@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"game_server/db"
+	_ "game_server/agent_store"
 	"game_server/server"
 	"log"
 	"os"
@@ -39,10 +39,6 @@ func main() {
 	log.Println("Starting controller on '0.0.0.0:8080'...")
 
 	parseCommandline()
-
-	// Start database
-	db.StartDB()
-	//defer db.StopDB()
 
 	// Starts serving http in seperate goroutine
 	gameServer := server.StartHTTPServer(":8080", DEBUG_HTTPLOG)
