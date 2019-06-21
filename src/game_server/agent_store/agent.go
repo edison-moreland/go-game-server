@@ -12,9 +12,16 @@ func init() {
 }
 
 // Agent defines defines and an agent that's part of the simulation
+//easyjson:json
 type Agent struct {
 	ID      uuid.UUID `json:"id"`
 	X, Y, Z float64
+}
+
+// AgentList is used instead of a raw []Agent for easier unmarshal
+//easyjson:json
+type AgentList struct {
+	Agents []Agent `json:"agents"`
 }
 
 // NewAgent creates a new agent
@@ -49,7 +56,6 @@ func DeleteAgent(id uuid.UUID) error {
 }
 
 // GetAllAgents returns every agent registered to the controller
-func GetAllAgents() ([]Agent, error) {
-
-	return agents.Values(), nil
+func GetAllAgents() (AgentList, error) {
+	return AgentList{agents.Values()}, nil
 }

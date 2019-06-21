@@ -2,10 +2,8 @@ package server
 
 import (
 	"context"
-	"encoding/json"
+	//"encoding/json"
 	"github.com/gorilla/handlers"
-	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -14,16 +12,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func contentTypeMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Content-Type", "application/json")
-		next.ServeHTTP(w, r)
-	})
-}
-
 func makeRouter() *mux.Router {
 	router := mux.NewRouter()
-	router.Use(contentTypeMiddleware)
 
 	// Add endpoints
 	AddAgentRoutes(router)
@@ -69,19 +59,4 @@ func StopHTTPServer(server *http.Server, existingConnectionTimeout time.Duration
 	if err := server.Shutdown(ctx); err != nil {
 		panic(err)
 	}
-}
-
-func UnmarshalBody(body io.Reader, bodyObject interface{}) error {
-	// Read request body
-	rawBody, err := ioutil.ReadAll(body)
-	if err != nil {
-		return err
-	}
-
-	// Unmarshal json from rawBody
-	if err = json.Unmarshal(rawBody, &bodyObject); err != nil {
-		return err
-	}
-
-	return nil
 }

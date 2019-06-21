@@ -1,10 +1,10 @@
 package server
 
 import (
-	"encoding/json"
 	"game_server/agent_store"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/mailru/easyjson"
 	"log"
 	"net/http"
 )
@@ -29,7 +29,8 @@ func getAgentsHandler(w http.ResponseWriter, request *http.Request) {
 		log.Panic(err.Error())
 	}
 
-	if err := json.NewEncoder(w).Encode(agents); err != nil {
+	_, _, err = easyjson.MarshalToHTTPResponseWriter(agents, w)
+	if err != nil {
 		log.Panic(err.Error())
 	}
 }
@@ -40,7 +41,7 @@ func newAgentHandler(w http.ResponseWriter, request *http.Request) {
 
 	var newAgent = agent_store.Agent{}
 	if request.ContentLength > 0 {
-		if err := UnmarshalBody(request.Body, &newAgent); err != nil {
+		if err := easyjson.UnmarshalFromReader(request.Body, &newAgent); err != nil {
 			log.Panic(err.Error())
 		}
 	}
@@ -52,7 +53,8 @@ func newAgentHandler(w http.ResponseWriter, request *http.Request) {
 	}
 
 	// Write JSON encoded model to response
-	if err := json.NewEncoder(w).Encode(agent); err != nil {
+	_, _, err = easyjson.MarshalToHTTPResponseWriter(agent, w)
+	if err != nil {
 		log.Panic(err.Error())
 	}
 
@@ -77,7 +79,8 @@ func getAgentHandler(w http.ResponseWriter, request *http.Request) {
 	}
 
 	// Write JSON encoded model to response
-	if err := json.NewEncoder(w).Encode(agent); err != nil {
+	_, _, err = easyjson.MarshalToHTTPResponseWriter(agent, w)
+	if err != nil {
 		log.Panic(err.Error())
 	}
 }
@@ -96,7 +99,7 @@ func updateAgentHandler(w http.ResponseWriter, request *http.Request) {
 
 	// unmarshal request body
 	var agentUpdate = agent_store.Agent{}
-	if err := UnmarshalBody(request.Body, &agentUpdate); err != nil {
+	if err := easyjson.UnmarshalFromReader(request.Body, &agentUpdate); err != nil {
 		log.Panic(err.Error())
 	}
 
