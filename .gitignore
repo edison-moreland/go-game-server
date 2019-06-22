@@ -1,5 +1,9 @@
 # Build artifacts
 pkg/
+bin/
+
+# Profiles
+*.prof
 
 # Python environment for scripts
 venv/

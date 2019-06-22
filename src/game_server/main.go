@@ -13,10 +13,12 @@ import (
 )
 
 // Debug flags
-var DEBUG_HTTPLOG = false
+var DEBUG_HTTPLOG = true
+var DEBUG_USEPPROF = true
 
 func parseCommandline() {
-	flag.BoolVar(&DEBUG_HTTPLOG, "httplog", false, "Log HTTP requests to stdout")
+	flag.BoolVar(&DEBUG_HTTPLOG, "nohttplog", true, "disables logging HTTP requests to stdout")
+	flag.BoolVar(&DEBUG_USEPPROF, "pprof", true, "disables pprof endpoints under '/debug/pprof/")
 
 	flag.Parse()
 }
@@ -37,7 +39,7 @@ func main() {
 	parseCommandline()
 
 	// Starts serving http in seperate goroutine
-	gameServer := server.StartHTTPServer(":8080", DEBUG_HTTPLOG)
+	gameServer := server.StartHTTPServer(":8080", DEBUG_HTTPLOG, DEBUG_USEPPROF)
 
 	//  --  Startup section over!  --  //
 	log.Println("Controller ready!")

@@ -2,6 +2,8 @@ package server
 
 import (
 	"context"
+	"net/http/pprof"
+
 	//"encoding/json"
 	"github.com/gorilla/handlers"
 	"log"
@@ -12,30 +14,38 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func makeRouter() *mux.Router {
+func makeRouter(usePprof bool) *mux.Router {
 	router := mux.NewRouter()
 
 	// Add endpoints
 	AddAgentRoutes(router)
 	AddUtilityRoutes(router)
 
+	if usePprof {
+		router.HandleFunc("/debug/pprof/", pprof.Index)
+		router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		router.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	}
+
 	return router
 }
 
-func StartHTTPServer(address string, logRequests bool) *http.Server {
+func StartHTTPServer(address string, logRequests bool, usePprof bool) *http.Server {
 	// Wrap router in handler that captures panics
-	router := handlers.RecoveryHandler()(makeRouter())
+	router := handlers.RecoveryHandler()(makeRouter(usePprof))
 	//router := makeRouter()
 
 	if logRequests {
-		router = handlers.LoggingHandler(os.Stdout, makeRouter())
+		router = handlers.LoggingHandler(os.Stdout, router)
 	}
 
 	server := &http.Server{
 		Addr:    address,
 		Handler: router,
 		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: time.Second * 15,
+		WriteTimeout: time.Second * 30,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
 	}
