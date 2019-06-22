@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  name: gameserver
+  labels:
+    app: gameserver
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      name: gameserver
+      nodePort: 8080
+  selector:
+    app: gameserver
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gameserver-deployment
+  labels:
+    app: gameserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gameserver
+  template:
+    metadata:
+      labels:
+        app: gameserver
+    spec:
+      containers:
+        - name: gameserver
+          image: gameserver
+          ports:
+            - containerPort: 8080
