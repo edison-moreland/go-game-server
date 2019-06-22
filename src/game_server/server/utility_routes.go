@@ -1,19 +1,20 @@
 package server
 
 import (
-	"github.com/gorilla/mux"
+	"github.com/buaazp/fasthttprouter"
+	"github.com/valyala/fasthttp"
 	"net/http"
 )
 
-func AddUtilityRoutes(router *mux.Router) {
+func AddUtilityRoutes(router *fasthttprouter.Router) {
 	// TODO Switch to using sub routers
 
-	router.HandleFunc("/ping", pingHandler).Methods("GET")
+	router.GET("/ping", pingHandler)
 }
 
 // pingHandler is used by client to check that server is online
-func pingHandler(w http.ResponseWriter, request *http.Request) {
+func pingHandler(ctx *fasthttp.RequestCtx) {
 	// TODO: Return server information. players online, etc
-	w.WriteHeader(http.StatusNoContent)
+	ctx.Response.SetStatusCode(http.StatusNoContent)
 	return
 }

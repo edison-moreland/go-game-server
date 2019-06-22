@@ -2,39 +2,40 @@ package server
 
 import (
 	"game_server/agent_store"
+	"github.com/buaazp/fasthttprouter"
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 	"github.com/mailru/easyjson"
+	"github.com/valyala/fasthttp"
 	"log"
 	"net/http"
 )
 
-func AddAgentRoutes(router *mux.Router) {
+func AddAgentRoutes(router *fasthttprouter.Router) {
 	// TODO Switch to using sub routers
 
 	// TODO: add deregister endpoint
-	router.HandleFunc("/agents", getAgentsHandler).Methods("GET")
-	router.HandleFunc("/agent", newAgentHandler).Methods("POST")
-	router.HandleFunc("/agent/{id}", getAgentHandler).Methods("GET")
-	router.HandleFunc("/agent/{id}", updateAgentHandler).Methods("PUT")
-	router.HandleFunc("/agent/{id}", deleteAgentHandler).Methods("DELETE")
+	router.GET("/agents", getAgentsHandler)
+	router.POST("/agent", newAgentHandler)
+	router.GET("/agent/:id", getAgentHandler)
+	router.PUT("/agent/:id", updateAgentHandler)
+	router.DELETE("/agent/:id", deleteAgentHandler)
 }
 
 // getAgentsHandler returns the uuid of all agents registered to simulation
-func getAgentsHandler(w http.ResponseWriter, request *http.Request) {
+func getAgentsHandler(ctx *fasthttp.RequestCtx) {
 	agents := agent_store.GetAllAgents()
 
-	_, _, err := easyjson.MarshalToHTTPResponseWriter(agents, w)
+	_, err := easyjson.MarshalToWriter(agents, ctx)
 	if err != nil {
 		log.Panic(err.Error())
 	}
 }
 
 // newAgentHandler registers a new agent to the controller
-func newAgentHandler(w http.ResponseWriter, request *http.Request) {
+func newAgentHandler(ctx *fasthttp.RequestCtx) {
 	var newAgent = agent_store.Agent{}
-	if request.ContentLength > 0 {
-		if err := easyjson.UnmarshalFromReader(request.Body, &newAgent); err != nil {
+	if ctx.Request.Header.ContentLength() > 0 {
+		if err := easyjson.Unmarshal(ctx.PostBody(), &newAgent); err != nil {
 			log.Panic(err.Error())
 		}
 	}
@@ -43,7 +44,7 @@ func newAgentHandler(w http.ResponseWriter, request *http.Request) {
 	agent := agent_store.NewAgent(newAgent)
 
 	// Write JSON encoded model to response
-	_, _, err := easyjson.MarshalToHTTPResponseWriter(agent, w)
+	_, err := easyjson.MarshalToWriter(agent, ctx)
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -51,12 +52,12 @@ func newAgentHandler(w http.ResponseWriter, request *http.Request) {
 }
 
 // getAgentStateHandler returns the state of a specific agent
-func getAgentHandler(w http.ResponseWriter, request *http.Request) {
+func getAgentHandler(ctx *fasthttp.RequestCtx) {
 	// Get id from url
-	id, err := uuid.Parse(mux.Vars(request)["id"])
+	id, err := uuid.Parse(ctx.UserValue("id").(string))
 	if err != nil {
 		log.Print(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		ctx.SetStatusCode(http.StatusBadRequest)
 		return
 	}
 
@@ -64,30 +65,30 @@ func getAgentHandler(w http.ResponseWriter, request *http.Request) {
 	agent, err := agent_store.GetAgent(id)
 	if err != nil {
 		log.Print(err.Error())
-		w.WriteHeader(http.StatusNotFound)
+		ctx.SetStatusCode(http.StatusNotFound)
 		return
 	}
 
 	// Write JSON encoded model to response
-	_, _, err = easyjson.MarshalToHTTPResponseWriter(agent, w)
+	_, err = easyjson.MarshalToWriter(agent, ctx)
 	if err != nil {
 		log.Panic(err.Error())
 	}
 }
 
 // updateAgentStateHandler returns the state of a specific agent
-func updateAgentHandler(w http.ResponseWriter, request *http.Request) {
+func updateAgentHandler(ctx *fasthttp.RequestCtx) {
 	// Get id from url
-	id, err := uuid.Parse(mux.Vars(request)["id"])
+	id, err := uuid.Parse(ctx.UserValue("id").(string))
 	if err != nil {
 		log.Print(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		ctx.SetStatusCode(http.StatusBadRequest)
 		return
 	}
 
 	// unmarshal request body
 	var agentUpdate = agent_store.Agent{}
-	if err := easyjson.UnmarshalFromReader(request.Body, &agentUpdate); err != nil {
+	if err := easyjson.Unmarshal(ctx.PostBody(), &agentUpdate); err != nil {
 		log.Panic(err.Error())
 	}
 
@@ -97,15 +98,15 @@ func updateAgentHandler(w http.ResponseWriter, request *http.Request) {
 	// Update agent
 	agent_store.UpdateAgent(agentUpdate)
 
-	w.WriteHeader(http.StatusNoContent)
+	ctx.SetStatusCode(http.StatusNoContent)
 }
 
-func deleteAgentHandler(w http.ResponseWriter, request *http.Request) {
+func deleteAgentHandler(ctx *fasthttp.RequestCtx) {
 	// Get id from url
-	id, err := uuid.Parse(mux.Vars(request)["id"])
+	id, err := uuid.Parse(ctx.UserValue("id").(string))
 	if err != nil {
 		log.Print(err.Error())
-		w.WriteHeader(http.StatusBadRequest)
+		ctx.SetStatusCode(http.StatusBadRequest)
 		return
 	}
 

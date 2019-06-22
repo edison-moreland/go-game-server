@@ -2,48 +2,55 @@ package server
 
 import (
 	"context"
-	"net/http/pprof"
-
-	//"encoding/json"
-	"github.com/gorilla/handlers"
-	"log"
 	"net/http"
-	"os"
+
+	"log"
 	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/buaazp/fasthttprouter"
+	"github.com/valyala/fasthttp"
 )
 
-func makeRouter(usePprof bool) *mux.Router {
-	router := mux.NewRouter()
+func makeRouter(usePprof bool) *fasthttprouter.Router {
+	router := &fasthttprouter.Router{
+		RedirectTrailingSlash:  false,
+		RedirectFixedPath:      false,
+		HandleMethodNotAllowed: false,
+		HandleOPTIONS:          true,
+
+		PanicHandler: func(ctx *fasthttp.RequestCtx, i interface{}) {
+			log.Printf("!PANIC! `%v`", i)
+			ctx.SetStatusCode(http.StatusInternalServerError)
+		},
+	}
 
 	// Add endpoints
 	AddAgentRoutes(router)
 	AddUtilityRoutes(router)
 
 	if usePprof {
-		router.HandleFunc("/debug/pprof/", pprof.Index)
-		router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
-		router.HandleFunc("/debug/pprof/profile", pprof.Profile)
-		router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
-		router.HandleFunc("/debug/pprof/trace", pprof.Trace)
+		// FIXME: pprof broke with new http library
+		//router.HandleFunc("/debug/pprof/", pprof.Index)
+		//router.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		//router.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		//router.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		//router.HandleFunc("/debug/pprof/trace", pprof.Trace)
 	}
 
 	return router
 }
 
-func StartHTTPServer(address string, logRequests bool, usePprof bool) *http.Server {
+func StartHTTPServer(address string, logRequests bool, usePprof bool) *fasthttp.Server {
 	// Wrap router in handler that captures panics
-	router := handlers.RecoveryHandler()(makeRouter(usePprof))
-	//router := makeRouter()
+	router := makeRouter(usePprof)
 
 	if logRequests {
-		router = handlers.LoggingHandler(os.Stdout, router)
+		// FIXME: Logging broke with new http library
+		//router = handlers.LoggingHandler(os.Stdout, router)
 	}
 
-	server := &http.Server{
-		Addr:    address,
-		Handler: router,
+	server := &fasthttp.Server{
+		Handler: router.Handler,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: time.Second * 60,
 		ReadTimeout:  time.Second * 15,
@@ -52,7 +59,7 @@ func StartHTTPServer(address string, logRequests bool, usePprof bool) *http.Serv
 
 	// Run server in a goroutine so that it doesn't block.
 	go func() {
-		if err := server.ListenAndServe(); err != nil {
+		if err := server.ListenAndServe(address); err != nil {
 			log.Println(err)
 		}
 	}()
@@ -60,13 +67,13 @@ func StartHTTPServer(address string, logRequests bool, usePprof bool) *http.Serv
 	return server
 }
 
-func StopHTTPServer(server *http.Server, existingConnectionTimeout time.Duration) {
+func StopHTTPServer(server *fasthttp.Server, existingConnectionTimeout time.Duration) {
 	// Create a deadline to wait for existing connections to finish
-	ctx, cancel := context.WithTimeout(context.Background(), existingConnectionTimeout)
+	_, cancel := context.WithTimeout(context.Background(), existingConnectionTimeout)
 	defer cancel()
 
 	log.Println("Waiting for existing connections to finish...")
-	if err := server.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(); err != nil {
 		panic(err)
 	}
 }
