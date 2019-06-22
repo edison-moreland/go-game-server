@@ -29,7 +29,7 @@ func NewAgent(a Agent) Agent {
 	id, _ := uuid.NewRandom()
 	a.ID = id
 
-	agents.Store(id, a)
+	agents.Store(a)
 
 	return a
 }
@@ -45,7 +45,7 @@ func GetAgent(id uuid.UUID) (Agent, error) {
 
 // UpdateAgent updates the state of an agent
 func UpdateAgent(agent Agent) {
-	agents.Store(agent.ID, agent)
+	agents.Store(agent)
 }
 
 // DeleteAgent removes agent from db

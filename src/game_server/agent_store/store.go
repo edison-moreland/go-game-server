@@ -29,9 +29,9 @@ func (rm *agentStore) Delete(key uuid.UUID) {
 	rm.Unlock()
 }
 
-func (rm *agentStore) Store(key uuid.UUID, value Agent) {
+func (rm *agentStore) Store(value Agent) {
 	rm.Lock()
-	rm.internal[key] = value
+	rm.internal[value.ID] = value
 	rm.Unlock()
 }
 
