@@ -14,8 +14,6 @@ func AddUtilityRoutes(router *mux.Router) {
 // pingHandler is used by client to check that server is online
 func pingHandler(w http.ResponseWriter, request *http.Request) {
 	// TODO: Return server information. players online, etc
-	defer request.Body.Close()
-
 	w.WriteHeader(http.StatusNoContent)
 	return
 }

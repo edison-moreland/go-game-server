@@ -22,8 +22,6 @@ func AddAgentRoutes(router *mux.Router) {
 
 // getAgentsHandler returns the uuid of all agents registered to simulation
 func getAgentsHandler(w http.ResponseWriter, request *http.Request) {
-	defer request.Body.Close()
-
 	agents, err := agent_store.GetAllAgents()
 	if err != nil {
 		log.Panic(err.Error())
@@ -37,8 +35,6 @@ func getAgentsHandler(w http.ResponseWriter, request *http.Request) {
 
 // newAgentHandler registers a new agent to the controller
 func newAgentHandler(w http.ResponseWriter, request *http.Request) {
-	defer request.Body.Close()
-
 	var newAgent = agent_store.Agent{}
 	if request.ContentLength > 0 {
 		if err := easyjson.UnmarshalFromReader(request.Body, &newAgent); err != nil {
@@ -87,8 +83,6 @@ func getAgentHandler(w http.ResponseWriter, request *http.Request) {
 
 // updateAgentStateHandler returns the state of a specific agent
 func updateAgentHandler(w http.ResponseWriter, request *http.Request) {
-	defer request.Body.Close()
-
 	// Get id from url
 	id, err := uuid.Parse(mux.Vars(request)["id"])
 	if err != nil {
