@@ -1,8 +1,8 @@
 package server
 
 import (
-	"game_server/agent_store"
 	"github.com/buaazp/fasthttprouter"
+	"github.com/edison-moreland/go-game-server/game_server/agent_store"
 	"github.com/google/uuid"
 	"github.com/mailru/easyjson"
 	"github.com/valyala/fasthttp"

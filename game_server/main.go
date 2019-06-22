@@ -2,8 +2,8 @@ package main
 
 import (
 	"flag"
-	_ "game_server/agent_store"
-	"game_server/server"
+	_ "github.com/edison-moreland/go-game-server/game_server/agent_store"
+	"github.com/edison-moreland/go-game-server/game_server/server"
 	"log"
 	"os"
 	"os/signal"
