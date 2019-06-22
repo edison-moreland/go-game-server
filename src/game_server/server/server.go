@@ -45,7 +45,7 @@ func StartHTTPServer(address string, logRequests bool, usePprof bool) *http.Serv
 		Addr:    address,
 		Handler: router,
 		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: time.Second * 30,
+		WriteTimeout: time.Second * 60,
 		ReadTimeout:  time.Second * 15,
 		IdleTimeout:  time.Second * 60,
 	}
