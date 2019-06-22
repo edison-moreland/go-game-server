@@ -22,12 +22,9 @@ func AddAgentRoutes(router *mux.Router) {
 
 // getAgentsHandler returns the uuid of all agents registered to simulation
 func getAgentsHandler(w http.ResponseWriter, request *http.Request) {
-	agents, err := agent_store.GetAllAgents()
-	if err != nil {
-		log.Panic(err.Error())
-	}
+	agents := agent_store.GetAllAgents()
 
-	_, _, err = easyjson.MarshalToHTTPResponseWriter(agents, w)
+	_, _, err := easyjson.MarshalToHTTPResponseWriter(agents, w)
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -43,13 +40,10 @@ func newAgentHandler(w http.ResponseWriter, request *http.Request) {
 	}
 
 	// Create new agent
-	agent, err := agent_store.NewAgent(newAgent)
-	if err != nil {
-		log.Panic(err.Error())
-	}
+	agent := agent_store.NewAgent(newAgent)
 
 	// Write JSON encoded model to response
-	_, _, err = easyjson.MarshalToHTTPResponseWriter(agent, w)
+	_, _, err := easyjson.MarshalToHTTPResponseWriter(agent, w)
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -101,11 +95,7 @@ func updateAgentHandler(w http.ResponseWriter, request *http.Request) {
 	agentUpdate.ID = id
 
 	// Update agent
-	if err := agent_store.UpdateAgent(agentUpdate); err != nil {
-		log.Print(err.Error())
-		w.WriteHeader(http.StatusNotFound)
-		return
-	}
+	agent_store.UpdateAgent(agentUpdate)
 
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -119,7 +109,5 @@ func deleteAgentHandler(w http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	if err = agent_store.DeleteAgent(id); err != nil {
-		log.Panic(err)
-	}
+	agent_store.DeleteAgent(id)
 }

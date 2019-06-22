@@ -25,13 +25,13 @@ type AgentList struct {
 }
 
 // NewAgent creates a new agent
-func NewAgent(a Agent) (Agent, error) {
+func NewAgent(a Agent) Agent {
 	id, _ := uuid.NewRandom()
 	a.ID = id
 
 	agents.Store(id, a)
 
-	return a, nil
+	return a
 }
 
 // GetAgent return the agent with the specified UUID
@@ -44,18 +44,16 @@ func GetAgent(id uuid.UUID) (Agent, error) {
 }
 
 // UpdateAgent updates the state of an agent
-func UpdateAgent(agent Agent) error {
+func UpdateAgent(agent Agent) {
 	agents.Store(agent.ID, agent)
-	return nil
 }
 
 // DeleteAgent removes agent from db
-func DeleteAgent(id uuid.UUID) error {
+func DeleteAgent(id uuid.UUID) {
 	agents.Delete(id)
-	return nil
 }
 
 // GetAllAgents returns every agent registered to the controller
-func GetAllAgents() (AgentList, error) {
-	return AgentList{agents.Values()}, nil
+func GetAllAgents() AgentList {
+	return AgentList{agents.Values()}
 }
