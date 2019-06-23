@@ -11,7 +11,7 @@ spec:
   ports:
     - port: 8080
       name: gameserver
-      nodePort: 8080
+      nodePort: 30000
   selector:
     app: gameserver
 ---
@@ -33,6 +33,6 @@ spec:
     spec:
       containers:
         - name: gameserver
-          image: gameserver
+          image: gameserver:local
           ports:
             - containerPort: 8080
