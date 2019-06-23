@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  name: locust
+  labels:
+    app: locust
+spec:
+  type: NodePort
+  ports:
+    - port: 8089
+      name: locust
+      nodePort: 30001
+  selector:
+    app: locust
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-deployment
+  labels:
+    app: locust
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: locust
+  template:
+    metadata:
+      labels:
+        app: locust
+    spec:
+      containers:
+        - name: locust
+          image: locust:local
+          ports:
+            - containerPort: 8089
+          env:
+            - name: SERVERADDRESS
+              value: "http://gameserver"
+            - name: SERVERPORT
+              value: "8080"
