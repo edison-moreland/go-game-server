@@ -7,7 +7,7 @@ metadata:
   labels:
     app: locust-master
 spec:
-  type: locust-master
+  type: NodePort
   ports:
     - port: 8089
       name: locust-master
