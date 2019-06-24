@@ -3,7 +3,7 @@ kind: Service
 metadata:
   annotations:
     service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-  name: locust-master
+  name: locust-master-external
   labels:
     app: locust-master
 spec:
@@ -12,6 +12,24 @@ spec:
     - port: 8089
       name: locust-master
       nodePort: 30001
+  selector:
+    app: locust-master
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+  name: locust-master-internal
+  labels:
+    app: locust-master
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5557
+      name: internal-1
+    - port: 5558
+      name: internal-2
   selector:
     app: locust-master
 ---
@@ -36,6 +54,8 @@ spec:
           image: locust:local
           ports:
             - containerPort: 8089
+            - containerPort: 5557
+            - containerPort: 5558
           args: ["--host", "http://gameserver:8080", "--master"]
 ---
 apiVersion: apps/v1
@@ -57,6 +77,4 @@ spec:
       containers:
         - name: locust-slave
           image: locust:local
-          ports:
-            - containerPort: 8089
-          args: ["--host=http://gameserver:8080", "--slave", "--master-host=locust-master"]
+          args: ["--host=http://gameserver:8080", "--slave", "--master-host=locust-master-internal", "--master-port=5557"]
