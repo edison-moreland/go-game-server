@@ -3,41 +3,60 @@ kind: Service
 metadata:
   annotations:
     service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
-  name: locust
+  name: locust-master
   labels:
-    app: locust
+    app: locust-master
 spec:
-  type: NodePort
+  type: locust-master
   ports:
     - port: 8089
-      name: locust
+      name: locust-master
       nodePort: 30001
   selector:
-    app: locust
+    app: locust-master
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: locust-deployment
+  name: locust-master
   labels:
-    app: locust
+    app: locust-master
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: locust
+      app: locust-master
   template:
     metadata:
       labels:
-        app: locust
+        app: locust-master
     spec:
       containers:
-        - name: locust
+        - name: locust-master
           image: locust:local
           ports:
             - containerPort: 8089
-          env:
-            - name: SERVERADDRESS
-              value: "http://gameserver"
-            - name: SERVERPORT
-              value: "8080"
+          args: ["--host", "http://gameserver:8080", "--master"]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: locust-slave
+  labels:
+    app: locust-slave
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: locust-slave
+  template:
+    metadata:
+      labels:
+        app: locust-slave
+    spec:
+      containers:
+        - name: locust-slave
+          image: locust:local
+          ports:
+            - containerPort: 8089
+          args: ["--host=http://gameserver:8080", "--slave", "--master-host=locust-master"]
